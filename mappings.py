@@ -1,0 +1,96 @@
+"""Provides mappings between Home Assistant and MHI HVAC API values.
+
+This module defines dictionaries that map Home Assistant HVAC modes, fan modes,
+and swing modes to their corresponding MHI API values, and vice-versa. These
+mappings are used for translating between the two systems.
+"""
+
+from .const import (
+    MHIFanAPI,
+    MHIFanMode,
+    MHIHVACMode,
+    MHILockAPI,
+    MHILockMode,
+    MHILouverAPI,
+    MHIModeAPI,
+    MHIOnOffAPI,
+    MHIOnOffMode,
+    MHISwingMode,
+)
+
+# API to HA Mappings
+API_TO_HA_HVAC_MODE = {
+    MHIModeAPI.COOL: MHIHVACMode.COOL,
+    MHIModeAPI.DRY: MHIHVACMode.DRY,
+    MHIModeAPI.FAN_ONLY: MHIHVACMode.FAN_ONLY,
+    MHIModeAPI.HEAT: MHIHVACMode.HEAT,
+}
+
+API_TO_HA_FAN_MODE = {
+    MHIFanAPI.LOW: MHIFanMode.LOW,
+    MHIFanAPI.MEDIUM: MHIFanMode.MEDIUM,
+    MHIFanAPI.HIGH: MHIFanMode.HIGH,
+    MHIFanAPI.DIFFUSE: MHIFanMode.DIFFUSE,
+}
+
+API_TO_HA_SWING_MODE = {
+    MHILouverAPI.AUTO: MHISwingMode.AUTO,
+    MHILouverAPI.STOP1: MHISwingMode.STOP1,
+    MHILouverAPI.STOP2: MHISwingMode.STOP2,
+    MHILouverAPI.STOP3: MHISwingMode.STOP3,
+    MHILouverAPI.STOP4: MHISwingMode.STOP4,
+}
+
+API_TO_HA_LOCK_MODE = {
+    MHILockAPI.LOCKED: MHILockMode.LOCKED,
+    MHILockAPI.LOCKED_ONOFF: MHILockMode.LOCKED_ONOFF,
+    MHILockAPI.LOCKED_MODE: MHILockMode.LOCKED_MODE,
+    MHILockAPI.LOCKED_TEMP: MHILockMode.LOCKED_TEMP,
+    MHILockAPI.LOCKED_ONOFF_MODE: MHILockMode.LOCKED_ONOFF_MODE,
+    MHILockAPI.LOCKED_ONOFF_TEMP: MHILockMode.LOCKED_ONOFF_TEMP,
+    MHILockAPI.LOCKED_MODE_TEMP: MHILockMode.LOCKED_MODE_TEMP,
+    MHILockAPI.UNLOCKED: MHILockMode.UNLOCKED,
+}
+
+HA_TO_API_HVAC_MODE = {
+    MHIHVACMode.COOL: MHIModeAPI.COOL,
+    MHIHVACMode.DRY: MHIModeAPI.DRY,
+    MHIHVACMode.FAN_ONLY: MHIModeAPI.FAN_ONLY,
+    MHIHVACMode.HEAT: MHIModeAPI.HEAT,
+}
+
+HA_TO_API_FAN_MODE = {
+    MHIFanMode.LOW: MHIFanAPI.LOW,
+    MHIFanMode.MEDIUM: MHIFanAPI.MEDIUM,
+    MHIFanMode.HIGH: MHIFanAPI.HIGH,
+    MHIFanMode.DIFFUSE: MHIFanAPI.DIFFUSE,
+}
+
+HA_TO_API_SWING_MODE = {
+    MHISwingMode.AUTO: MHILouverAPI.AUTO,
+    MHISwingMode.STOP1: MHILouverAPI.STOP1,
+    MHISwingMode.STOP2: MHILouverAPI.STOP2,
+    MHISwingMode.STOP3: MHILouverAPI.STOP3,
+    MHISwingMode.STOP4: MHILouverAPI.STOP4,
+}
+
+HA_TO_API_ONOFF_MODE = {
+    MHIOnOffMode.ON: MHIOnOffAPI.ON,
+    MHIOnOffMode.OFF: MHIOnOffAPI.OFF,
+}
+
+HA_TO_API_FILTER_RESET = {
+    True: "1",
+    False: "0",
+}
+
+HA_TO_API_LOCK_MODE = {
+    MHILockMode.LOCKED: MHILockAPI.LOCKED,
+    MHILockMode.LOCKED_ONOFF: MHILockAPI.LOCKED_ONOFF,
+    MHILockMode.LOCKED_MODE: MHILockAPI.LOCKED_MODE,
+    MHILockMode.LOCKED_TEMP: MHILockAPI.LOCKED_TEMP,
+    MHILockMode.LOCKED_ONOFF_MODE: MHILockAPI.LOCKED_ONOFF_MODE,
+    MHILockMode.LOCKED_ONOFF_TEMP: MHILockAPI.LOCKED_ONOFF_TEMP,
+    MHILockMode.LOCKED_MODE_TEMP: MHILockAPI.LOCKED_MODE_TEMP,
+    MHILockMode.UNLOCKED: MHILockAPI.UNLOCKED,
+}
