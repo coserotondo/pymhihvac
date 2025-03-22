@@ -39,17 +39,17 @@ async def main():
         username="admin",
         password="password"
     )
-    
+
     # Login to API
     await controller.async_login()
-    
+
     # Fetch all devices
     devices = await controller.async_update_data()
-    
+
     # Control first device
     device = devices[0]
     print(f"Controlling: {device.group_name} ({device.group_no})")
-    
+
     # Turn on cooling at 22°C
     await controller.async_set_hvac_mode(device, "cool")
     await controller.async_set_target_temperature(device, 22.0)
@@ -151,24 +151,24 @@ class MHIHVACDeviceData:
 ## Requirements
 
 -   Python 3.9+
-    
+
 -   aiohttp >= 3.8.0
-    
+
 -   voluptuous >= 0.13.0
-    
+
 
 ## Contributing
 
 1.  Fork the repository
-    
+
 2.  Create a feature branch (`git checkout -b feature/your-feature`)
-    
+
 3.  Commit changes (`git commit -am 'Add awesome feature'`)
-    
+
 4.  Push to branch (`git push origin feature/your-feature`)
-    
+
 5.  Open a Pull Request
-    
+
 
 ## License
 
@@ -176,4 +176,4 @@ MIT License - See  [LICENSE](https://license/)  for details.
 
 ----------
 
-**Disclaimer**: This project is not affiliated with or endorsed by Mitsubishi Heavy Industries. Use at your own risk. Always ensure proper HVAC system configuration before deployment.
+**Disclaimer**: This project is not affiliated with or endorsed by Mitsubishi Heavy Industries. Use at your own risk. Always ensure proper HVAC system configuration before deployment. TESTXXXX....
