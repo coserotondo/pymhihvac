@@ -176,4 +176,4 @@ MIT License - See  [LICENSE](https://license/)  for details.
 
 ----------
 
-**Disclaimer**: This project is not affiliated with or endorsed by Mitsubishi Heavy Industries. Use at your own risk. Always ensure proper HVAC system configuration before deployment. TESTXXXX....
+**Disclaimer**: This project is not affiliated with or endorsed by Mitsubishi Heavy Industries. Use at your own risk. Always ensure proper HVAC system configuration before deployment.
