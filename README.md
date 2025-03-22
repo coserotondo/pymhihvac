@@ -13,7 +13,7 @@ A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems 
   - Set temperature (18-30°C)
   - Adjust fan speeds (Low/Medium/High/Diffuse)
   - Control swing modes (Auto/Stop1-4)
-  - Set HVAC modes (Cool/Dry/Fan/Heat)
+  - Set HVAC modes (Cool/Dry/Fan/Heat/fan Only)
 - **Status Monitoring**:
   - Current temperature
   - Filter status
@@ -86,33 +86,14 @@ controller = MHIHVACSystemController(
 ```
 Key Methods:
 
-Method
-
-Description
-
-`async_login()`
-
-Establish API session
-
-`async_update_data()`
-
-Fetch current device states
-
-`async_set_hvac_mode(device, mode)`
-
-Set HVAC mode
-
-`async_set_target_temperature(device, temp)`
-
-Set target temperature
-
-`async_set_fan_mode(device, mode)`
-
-Set fan speed
-
-`async_set_swing_mode(device, mode)`
-
-Set swing position
+|Method|Description|
+|--|--|
+|`async_login()`|Establish API session|
+|`async_update_data()`|Fetch current device states|
+|`async_set_hvac_mode(device, mode)`|Set HVAC mode|
+|`async_set_target_temperature(device, temp)`|Set target temperature|
+|`async_set_fan_mode(device, mode)`|Set fan speed|
+|`async_set_swing_mode(device, mode)`|Set swing position|
 
 #### `MHIHVACDeviceData`
 ```python
@@ -148,6 +129,28 @@ class MHIHVACDeviceData:
 |`high`|`3`|
 |`diffuse`|`4`|
 
+**Swing Modes:**
+|Home Assistant |MHI API Value|
+|:--:|:--:|
+|`auto`|`1`|
+|`stop1`|`2`|
+|`stop2`|`3`|
+|`stop3`|`4`|
+|`stop4`|`5`|
+
+**Filter Sign:**
+|Home Assistant |MHI API Value|
+|:--:|:--:|
+|`clean`|`0`|
+|`dirty`|`1`|
+
+**RC Lock:**
+|Home Assistant |MHI API Value|
+|:--:|:--:|
+|`locked`|`222`|
+|`unlocked`|`111`|
+
+
 ## Requirements
 
 -   Python 3.9+
@@ -172,7 +175,7 @@ class MHIHVACDeviceData:
 
 ## License
 
-MIT License - See  [LICENSE](https://license/)  for details.
+[MIT](https://choosealicense.com/licenses/mit/)
 
 ----------
 

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pymhihvac"
+version = "0.1.0"
+authors = [{ name = "coserotondo", email = "cose.rotondo@gmail.com" }]
+description = "Python library to interact with Mitsubishi Heavy Industries HVAC systems"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+    "aiohttp>=3.8.0",
+    "voluptuous>=0.13.0",
+]
+[project.urls]
+Homepage = "https://github.com/coserotondo/pymhihvac"
