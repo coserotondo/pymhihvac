@@ -131,50 +131,22 @@ class MHIHVACDeviceData:
     rc_lock: bool                 # Remote control locked
 ```
 ### Mode Mappings
+**HVAC Modes:**
+|Home Assistant |MHI API Value|
+|:--:|:--:|
+|`off`|-|
+|`cool`|`2`|
+|`dry`|`3`|
+|`fan_only`|`4`|
+|`heat`|`5`|
 
-Home Assistant
-
-MHI API Value
-
-**HVAC Modes**
-
-`off`
-
--
-
-`cool`
-
-`2`
-
-`dry`
-
-`3`
-
-`fan_only`
-
-`4`
-
-`heat`
-
-`5`
-
-**Fan Modes**
-
-`low`
-
-`1`
-
-`medium`
-
-`2`
-
-`high`
-
-`3`
-
-`diffuse`
-
-`4`
+**Fan Modes:**
+|Home Assistant |MHI API Value|
+|:--:|:--:|
+|`low`|`1`|
+|`medium`|`2`|
+|`high`|`3`|
+|`diffuse`|`4`|
 
 ## Requirements
 
