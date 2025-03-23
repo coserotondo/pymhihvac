@@ -6,6 +6,7 @@ methods for fetching data, setting properties on individual units or groups,
 managing the API session, and handling login and authentication.
 """
 
+from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -88,13 +89,30 @@ class MHIHVACSystemController:
         """Return the cookie of the session."""
         return self._session_cookie
 
-    async def async_update_data(self) -> dict[str, Any] | None:
+    async def async_update_data(
+        self,
+        method: str,
+        include_index: list[str] | None = None,
+        include_groups: list[str] | None = None,
+    ) -> dict[str, Any] | None:
         """Fetch the latest data from the API."""
         try:
-            return await self.api.async_get_raw_data()
-        except (ApiCallFailedException, ClientError, TimeoutError) as e:
+            return await self.api.async_get_raw_data(
+                method=method,
+                include_index=include_index,
+                include_groups=include_groups,
+            )
+        except (
+            ClientError,
+            TimeoutError,
+            JSONDecodeError,
+            ApiCallFailedException,
+            LoginFailedException,
+            NoSessionCookieException,
+        ) as e:
             _LOGGER.error("Error updating data from API: %s", format_exception(e))
-            return None
+            raise
+            # return None
 
     async def _async_set_group_property(
         self, group_no: str, payload: dict[str, Any]

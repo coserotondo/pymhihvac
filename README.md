@@ -43,8 +43,21 @@ async def main():
     # Login to API
     await controller.async_login()
 
-    # Fetch all devices
-    devices = await controller.async_update_data()
+    # Fetch raw_data devices
+    raw_data = await controller.async_update_data(
+      method="all",               # "all" (Default) = all valid units, "block" = "units in configured blocks"
+      include_index="['1','2']",  # (Optional) The index of the blocks to include
+      include_groups="['1','2']", # (Optional) The 'GroupNo' of the units to include
+    )
+
+    # Fetch all devices and virtual groups fromraw_data devices
+    devices_data: list[
+        MHIHVACDeviceData
+    ] = await self.hass.async_add_executor_job(
+        parse_raw_data,
+        raw_data_list,
+        self.virtual_group_config,
+    )
 
     # Control first device
     device = devices[0]

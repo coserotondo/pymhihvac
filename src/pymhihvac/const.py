@@ -194,3 +194,16 @@ DEFAULT_SWING_MODE = MHISwingMode.AUTO
 
 MIN_TEMP = 18
 MAX_TEMP = 30
+
+RAW_DATA_REQUEST_KEY_MAPPING: dict[str, dict[str, str]] = {
+    "all": {"payload_key": "GetReqAllGroupData", "value_key": "GroupData"},
+    "block": {"payload_key": "GetReqGroupData", "value_key": "FloorNo"},
+}
+
+RAW_DATA_RESPONSE_KEY_MAPPING: dict[str, dict[str, str]] = {
+    "all": {"payload_key": "GetResAllGroupData", "value_key": "GroupData"},
+    "block": {"payload_key": "GetResGroupData", "value_key": "FloorData"},
+}
+
+DEFAULT_RAW_DATA_REQUEST_METHOD = "all"
+DEFAULT_RAW_DATA_REQUEST_INDEX = ["1"]

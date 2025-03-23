@@ -14,6 +14,12 @@ from typing import Any, TypeVar, cast
 
 import aiohttp
 
+from .const import (
+    DEFAULT_RAW_DATA_REQUEST_INDEX,
+    DEFAULT_RAW_DATA_REQUEST_METHOD,
+    RAW_DATA_REQUEST_KEY_MAPPING,
+    RAW_DATA_RESPONSE_KEY_MAPPING,
+)
 from .utils import format_exception
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +49,14 @@ class SessionExpiredException(Exception):
 
 class SessionNotInitializedException(Exception):
     """Raised when the session cookie is expired or invalid."""
+
+
+class InvalidGetRawDataPayload(Exception):
+    """Raised for invalid payloads for getting raw data."""
+
+
+class InvalidGetRawDataResponse(Exception):
+    """Raised for invalid payloads for getting raw data."""
 
 
 T = TypeVar("T")
@@ -77,6 +91,100 @@ def reauth_retry(
         return wrapper
 
     return decorator
+
+
+def _get_filtered_group_data(
+    data: dict, method: str, include_groups: list[str] | None = None
+) -> list[dict]:
+    """Retrieve and filter the group data from a response dictionary.
+
+    The function determines the correct path for group data based on the
+    provided method using RAW_DATA_RESPONSE_KEY_MAPPING. For "all" the groups
+    are expected directly under the key; for "block" the groups are nested within
+    each floor's "GroupData". It then filters out any groups with "OnOff" == "4"
+    or "GroupNo" == "-1" and, if provided, only includes groups whose "GroupNo" is in
+    the include_groups list.
+
+    Args:
+        data (dict): The API response dictionary.
+        method (str, optional): Either "all" or "block". Defaults to "all".
+        include_groups (list[str], optional): Optional list of GroupNo strings to filter by.
+
+    Returns:
+        list[dict]: A list of filtered group dictionaries.
+
+    Raises:
+        InvalidGetRawDataResponse: If the method is invalid or keys are missing.
+
+    """
+    mapping = RAW_DATA_RESPONSE_KEY_MAPPING.get(method)
+    if not mapping:
+        raise InvalidGetRawDataResponse(f"Invalid method: {method}")
+
+    payload_key = mapping.get("payload_key")
+    value_key = mapping.get("value_key")
+    groups: list[dict] = []
+    # if include_groups is None:
+    #     include_groups = []
+
+    if payload_key not in data:
+        raise InvalidGetRawDataResponse(f"Key {payload_key} not found in data")
+
+    # For the "all" method, the groups are directly in value_key ("GroupData")
+    if method == "all":
+        groups = data[payload_key].get(value_key, [])
+
+    # For the "block" method, the groups are nested in each floor's "GroupData"
+    elif method == "block":
+        floors = data[payload_key].get(value_key, [])
+        for floor in floors:
+            groups.extend(floor.get("GroupData", []))
+
+    return [
+        group
+        for group in groups
+        if group.get("OnOff") != "4"
+        and group.get("GroupNo") != "-1"
+        and (
+            include_groups is None
+            or not include_groups
+            or group.get("GroupNo") in include_groups
+        )
+    ]
+
+
+def _build_get_raw_data_payload(method: str, include_index: list[str] | None) -> str:
+    """Build the payload for a raw data "Get" request.
+
+    This function constructs the payload string for retrieving raw data from the API.
+    It uses the provided method and value to create a JSON formatted payload.
+
+    Args:
+        method (str, optional): The method to use for retrieving data. Defaults to "all".
+        include_index (str | list[str], optional): The index associated with the method. Defaults to "1".
+
+    Returns:
+        str: The JSON formatted payload string.
+
+    Raises:
+        InvalidGetRawDataPayload: If the provided method is invalid or the payload cannot be constructed.
+
+    """
+
+    keys = RAW_DATA_REQUEST_KEY_MAPPING.get(method)
+    if not keys:
+        raise InvalidGetRawDataPayload
+
+    if include_index is None or not include_index:
+        include_index = DEFAULT_RAW_DATA_REQUEST_INDEX
+
+    payload_key = keys.get("payload_key")
+    value_key = keys.get("value_key")
+
+    if payload_key and value_key:
+        payload_dict = {payload_key: {value_key: include_index}}
+        return f"={json.dumps(payload_dict)}"
+    raise InvalidGetRawDataPayload
 
 
 class MHIHVACLocalAPI:
@@ -130,7 +238,12 @@ class MHIHVACLocalAPI:
             _LOGGER.debug("Session closed")
 
     @reauth_retry()
-    async def async_get_raw_data(self) -> dict[str, Any]:
+    async def async_get_raw_data(
+        self,
+        method: str = DEFAULT_RAW_DATA_REQUEST_METHOD,
+        include_index: list[str] | None = None,
+        include_groups: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Fetch data from HVAC system with error handling."""
         if not self._session:
             raise SessionNotInitializedException("Session is not initialized")
@@ -138,21 +251,21 @@ class MHIHVACLocalAPI:
             self._session_cookie = await self.async_login()
         headers: dict[str, str] = HTTP_HEADERS.copy()
         headers["Cookie"] = self._session_cookie
-        payload: str = '={"GetReqGroupData":{"FloorNo":["1"]}}'
+        payload: str = _build_get_raw_data_payload(
+            method=method, include_index=include_index
+        )
         try:
             async with asyncio.timeout(10):
                 async with self._session.post(
                     self._api_url, data=payload, headers=headers
                 ) as resp:
                     resp_text: str = await resp.text()
-                    data: dict[str, Any] = json.loads(resp_text)
-                    floor_data: dict[str, Any] = data.get("GetResGroupData", {}).get(
-                        "FloorData", [{}]
-                    )[0]
-                    if floor_data.get("FloorNo") == "-1":
-                        raise SessionExpiredException
-                    # Cast the value to dict[str, Any] so that mypy accepts it.
-                    return cast(dict[str, Any], floor_data.get("GroupData", {}))
+                    raw_data: dict[str, Any] = json.loads(resp_text)
+                    if filtered_data := _get_filtered_group_data(
+                        data=raw_data, method=method, include_groups=include_groups
+                    ):
+                        return cast(dict[str, Any], filtered_data)
+                    raise SessionExpiredException
         except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as e:
             _LOGGER.error("Error fetching data: %s", format_exception(e))
             raise
