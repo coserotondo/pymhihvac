@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems via their local API.
+A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems via their local API using a SC-SL4 central control unit. Built especiallty for Home Assistant, enable the creation of climate, sensor and binary sensor entities. It can also be used standalone.
 
 ## Features
 
@@ -13,11 +13,13 @@ A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems 
   - Set temperature (18-30°C)
   - Adjust fan speeds (Low/Medium/High/Diffuse)
   - Control swing modes (Auto/Stop1-4)
-  - Set HVAC modes (Cool/Dry/Fan/Heat/fan Only)
+  - Set HVAC modes (Cool/Dry/Fan/Heat/Fan Only)
 - **Status Monitoring**:
-  - Current temperature
+  - Current room temperature
   - Filter status
   - Remote control lock state
+- **Management**
+  - Filter reset
 - **Virtual Groups**: Manage multiple units as a single entity
 - **Async Support**: Built on `aiohttp` for efficient communication
 
@@ -30,7 +32,8 @@ pip install pymhihvac
 
 ```python
 import asyncio
-from pymhihvac import MHIHVACSystemController
+from pymhihvac.controller import MHIHVACSystemController
+from pymhihvac.device import MHIHVACDeviceData
 
 async def main():
     # Initialize controller
@@ -50,13 +53,12 @@ async def main():
       include_groups="['1','2']", # (Optional) The 'GroupNo' of the units to include
     )
 
-    # Fetch all devices and virtual groups fromraw_data devices
+    # Fetch all devices and virtual groups from API raw_data
     devices_data: list[
         MHIHVACDeviceData
-    ] = await self.hass.async_add_executor_job(
-        parse_raw_data,
+    ] = parse_raw_data(
         raw_data_list,
-        self.virtual_group_config,
+        virtual_group_config,
     )
 
     # Control first device
@@ -103,10 +105,17 @@ Key Methods:
 |--|--|
 |`async_login()`|Establish API session|
 |`async_update_data()`|Fetch current device states|
-|`async_set_hvac_mode(device, mode)`|Set HVAC mode|
+|`async_set_hvac_mode(device, mode)`|Set HVAC mode with auto On/Off|
+|`async_set_hvac_set_mode(device, mode)`|Set HVAC mode|
+|`async_turn_hvac_on (device)`|Turn HVAC on|
+|`async_turn_hvac_off(device)`|Turn HVAC off|
 |`async_set_target_temperature(device, temp)`|Set target temperature|
 |`async_set_fan_mode(device, mode)`|Set fan speed|
 |`async_set_swing_mode(device, mode)`|Set swing position|
+|`async_set_rc_lock(device,mode)`|Set the RC lock mode|
+|`async_filter_reset()`|Reset the Filter Signal|
+|`set_device_property(device,properties,values)`|Set any properties|
+|`async_close_session()`|Close the session if not passed to the controller|
 
 #### `MHIHVACDeviceData`
 ```python
