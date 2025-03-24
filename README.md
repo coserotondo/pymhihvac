@@ -71,17 +71,24 @@ async def main():
 
 asyncio.run(main())
 ```
-## Virtual Groups Configuration
+## Configuration (Example)
 
-Create virtual groups in a YAML configuration:
+Optionally you can create a YAML to store configuration and use `yaml.load(...)` to build a dictionary:
 ```yaml
-virtual_groups:
-  living_room:
-    name: "Living Room Group"
-    units: ["1", "2"]  # Group numbers from physical units
-  entire_floor:
-    name: "Entire Floor"
-    units: "all"       # Include all available units
+configuration:
+  data_fetching:
+    method: "all"
+    include_index: ["1", "2"]
+    include_groups: ["1", "2"]
+  virtual_groups:
+    129:
+      name: "Living Room Group"
+      units: ["1", "2"]  # Group numbers from physical units
+    130:
+      name: "Entire Floor"
+      units: "all"       # Include all available units
+
+
 ```
 ## API Reference
 

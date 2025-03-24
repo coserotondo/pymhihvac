@@ -97,7 +97,7 @@ class MHIHVACSystemController:
     ) -> dict[str, Any] | None:
         """Fetch the latest data from the API."""
         try:
-            return await self.api.async_get_raw_data(
+            result = await self.api.async_get_raw_data(
                 method=method,
                 include_index=include_index,
                 include_groups=include_groups,
@@ -112,7 +112,12 @@ class MHIHVACSystemController:
         ) as e:
             _LOGGER.error("Error updating data from API: %s", format_exception(e))
             raise
-            # return None
+        else:
+            _LOGGER.debug(
+                "Value of 'extra_valid_groups' from API: %s",
+                self.api.extra_valid_groups,
+            )
+            return result
 
     async def _async_set_group_property(
         self, group_no: str, payload: dict[str, Any]
@@ -171,7 +176,7 @@ class MHIHVACSystemController:
             return False
 
         if device_data.is_virtual:
-            if device_data.is_all_devices_group:
+            if device_data.is_all_devices_group and not self.api.extra_valid_groups:
                 _LOGGER.debug(
                     "Setting properties %s to ALL devices (Group No: %s, Group Name: %s)",
                     payload,
@@ -188,7 +193,7 @@ class MHIHVACSystemController:
             success: bool = True
             for unit in device_data.units:
                 if unit.group_no is None:
-                    _LOGGER.error("Unit group number is None for unit: %s", unit)
+                    _LOGGER.error("Unit group number is 'None' for unit: %s", unit)
                     success = False
                     continue
                 if not await self._async_set_group_property(unit.group_no, payload):
@@ -200,7 +205,7 @@ class MHIHVACSystemController:
                     )
             return success
         if device_data.group_no is None:
-            _LOGGER.error("Device group number is None for device: %s", device_data)
+            _LOGGER.error("Device group number is 'None' for device: %s", device_data)
             return False
         _LOGGER.debug(
             "Setting properties %s to unit (Group No: %s, Group Name: %s)",

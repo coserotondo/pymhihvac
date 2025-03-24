@@ -18,7 +18,6 @@ from .const import (
     MHISwingMode,
 )
 
-# API to HA Mappings
 API_TO_HA_HVAC_MODE = {
     MHIModeAPI.COOL: MHIHVACMode.COOL,
     MHIModeAPI.DRY: MHIHVACMode.DRY,

@@ -131,7 +131,7 @@ def find_most_frequent(data: Collection[Any]) -> Any:
 
 
 def calculate_average(
-    values: list[Any],  # Allow any type in the input list
+    values: list[Any],
     precision: int | None = 1,
 ) -> float | None:
     """Calculate the average of a list of values, handling non-numeric types and None.

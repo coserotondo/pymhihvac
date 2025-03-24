@@ -227,15 +227,6 @@ class MHIHVACDeviceData:
             )  # Compare sets of group numbers
         return None
 
-    # @property
-    # def valid_hvac_modes(self) -> list[str] | None:
-    #     """Return the valid HVAC modes for the device.
-
-    #     This property returns the list of valid HVAC modes, which is
-    #     stored internally after initialization.
-    #     """
-    #     return self._valid_hvac_modes
-
     def __repr__(self) -> str:
         """Return a string representation of the HVAC device data.
 
@@ -268,10 +259,8 @@ def parse_raw_data(
         (both individual units and virtual groups).
 
     """
-    all_devices: list[MHIHVACDeviceData] = []  # Initialize as empty list with type hint
-    real_unit_devices: list[
-        MHIHVACDeviceData
-    ] = []  # Initialize as empty list with type hint
+    all_devices: list[MHIHVACDeviceData] = []
+    real_unit_devices: list[MHIHVACDeviceData] = []
     # Parse real units first
     for item in raw_data_list:
         unit_device = MHIHVACDeviceData(raw_data=item)

@@ -8,6 +8,7 @@ mechanisms for handling session expirations.
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import json
 import logging
 from typing import Any, TypeVar, cast
@@ -62,6 +63,29 @@ class InvalidGetRawDataResponse(Exception):
 T = TypeVar("T")
 
 
+@dataclass
+class FilteredGroupData:
+    """A dataclass representing filtered group data.
+
+    This dataclass stores a list of groups and a boolean indicating
+    whether additional valid groups exist beyond those listed.
+
+    Attributes:
+        groups (list[dict[str, Any]]):
+            A list of group dictionaries. Each dictionary represents a group
+            and contains its associated data.
+        extra_valid_groups (bool):
+            A boolean flag indicating whether there are valid groups beyond
+            those included in the `groups` list. This can be useful for
+            pagination or situations where only a subset of groups is
+            initially retrieved.
+
+    """
+
+    groups: list[dict[str, Any]]
+    extra_valid_groups: bool
+
+
 def reauth_retry(
     max_retries: int = 3,
 ) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
@@ -95,26 +119,28 @@ def reauth_retry(
 
 def _get_filtered_group_data(
     data: dict, method: str, include_groups: list[str] | None = None
-) -> list[dict]:
-    """Retrieve and filter the group data from a response dictionary.
+) -> FilteredGroupData:
+    """Filter and extract group data from a raw data response.
 
-    The function determines the correct path for group data based on the
-    provided method using RAW_DATA_RESPONSE_KEY_MAPPING. For "all" the groups
-    are expected directly under the key; for "block" the groups are nested within
-    each floor's "GroupData". It then filters out any groups with "OnOff" == "4"
-    or "GroupNo" == "-1" and, if provided, only includes groups whose "GroupNo" is in
-    the include_groups list.
+    This function processes raw data retrieved from an API, extracts relevant group
+    information based on the specified method and optional group inclusions, and
+    returns a FilteredGroupData object containing the filtered groups and a flag
+    indicating if additional valid groups exist.
+
 
     Args:
-        data (dict): The API response dictionary.
-        method (str, optional): Either "all" or "block". Defaults to "all".
-        include_groups (list[str], optional): Optional list of GroupNo strings to filter by.
+        data (dict): The raw data dictionary retrieved from the API.
+        method (str): The method used to retrieve the data ("all" or "block").
+        include_groups (list[str] | None): An optional list of group numbers to
+            include in the filtered results. If None, all valid groups are included.
 
     Returns:
-        list[dict]: A list of filtered group dictionaries.
+        FilteredGroupData: A dataclass containing the filtered list of groups and
+            a boolean indicating whether additional valid groups exist.
 
     Raises:
-        InvalidGetRawDataResponse: If the method is invalid or keys are missing.
+        InvalidGetRawDataResponse: If the provided method is invalid or if the
+            expected keys are not found in the data.
 
     """
     mapping = RAW_DATA_RESPONSE_KEY_MAPPING.get(method)
@@ -123,34 +149,41 @@ def _get_filtered_group_data(
 
     payload_key = mapping.get("payload_key")
     value_key = mapping.get("value_key")
-    groups: list[dict] = []
-    # if include_groups is None:
-    #     include_groups = []
+    groups: list[dict[str, Any]] = []
 
     if payload_key not in data:
         raise InvalidGetRawDataResponse(f"Key {payload_key} not found in data")
 
-    # For the "all" method, the groups are directly in value_key ("GroupData")
+    # For the "all" method, groups are directly in the value_key ("GroupData")
     if method == "all":
         groups = data[payload_key].get(value_key, [])
-
-    # For the "block" method, the groups are nested in each floor's "GroupData"
+    # For the "block" method, groups are nested within each floor's "GroupData"
     elif method == "block":
         floors = data[payload_key].get(value_key, [])
         for floor in floors:
             groups.extend(floor.get("GroupData", []))
 
-    return [
+    # First, filter out groups with OnOff == "4" or GroupNo == "-1"
+    valid_groups = [
         group
         for group in groups
-        if group.get("OnOff") != "4"
-        and group.get("GroupNo") != "-1"
-        and (
-            include_groups is None
-            or not include_groups
-            or group.get("GroupNo") in include_groups
-        )
+        if group.get("OnOff") != "4" and group.get("GroupNo") != "-1"
     ]
+
+    # Further filter based on include_groups (if provided)
+    if include_groups is None or not include_groups:
+        filtered_groups = valid_groups
+        extra_valid = False
+    else:
+        filtered_groups = [
+            group for group in valid_groups if group.get("GroupNo") in include_groups
+        ]
+        # Determine if there are any valid groups that were filtered out
+        extra_valid = any(
+            group.get("GroupNo") not in include_groups for group in valid_groups
+        )
+
+    return FilteredGroupData(groups=filtered_groups, extra_valid_groups=extra_valid)
 
 
 def _build_get_raw_data_payload(method: str, include_index: list[str] | None) -> str:
@@ -200,10 +233,10 @@ class MHIHVACLocalAPI:
         """Initialize the API client.
 
         Args:
-            host: The HVAC system host or IP address.
-            username: The username to use for login.
-            password: The password to use for login.
-            session: Optional aiohttp ClientSession to use for requests.
+            host (str): The HVAC system host or IP address.
+            username (str): The username to use for login.
+            password (str): The password to use for login.
+            session (aiohttp ClientSession): Optional session to use for requests.
                      If None, a new session will be created internally.
 
         """
@@ -237,6 +270,20 @@ class MHIHVACLocalAPI:
             self._session = None
             _LOGGER.debug("Session closed")
 
+    @property
+    def extra_valid_groups(self) -> bool:
+        """Indicates whether additional valid groups exist.
+
+        Returns:
+                bool: True if additional valid groups exist, False otherwise.
+
+        """
+        return getattr(self, "_extra_valid_groups", False)
+
+    @extra_valid_groups.setter
+    def extra_valid_groups(self, value: bool) -> None:
+        self._extra_valid_groups = value
+
     @reauth_retry()
     async def async_get_raw_data(
         self,
@@ -261,10 +308,12 @@ class MHIHVACLocalAPI:
                 ) as resp:
                     resp_text: str = await resp.text()
                     raw_data: dict[str, Any] = json.loads(resp_text)
-                    if filtered_data := _get_filtered_group_data(
+                    result = _get_filtered_group_data(
                         data=raw_data, method=method, include_groups=include_groups
-                    ):
-                        return cast(dict[str, Any], filtered_data)
+                    )
+                    if result.groups:
+                        self.extra_valid_groups = result.extra_valid_groups
+                        return cast(dict[str, Any], result.groups)
                     raise SessionExpiredException
         except (aiohttp.ClientError, TimeoutError, json.JSONDecodeError) as e:
             _LOGGER.error("Error fetching data: %s", format_exception(e))
@@ -292,7 +341,7 @@ class MHIHVACLocalAPI:
         if not self._session:
             raise SessionNotInitializedException("Session is not initialized")
         if not isinstance(payload, dict):
-            _LOGGER.debug("Payload '%s' is not a dictionary", payload)
+            _LOGGER.error("Payload '%s' is not a dictionary", payload)
             return {"_async_send_command": "Payload is not a dictionary"}
         headers: dict[str, str] = HTTP_HEADERS.copy()
         data: str = f"={json.dumps(payload)}"
@@ -313,7 +362,6 @@ class MHIHVACLocalAPI:
                         )
                     if not resp_text.strip():
                         raise SessionExpiredException
-                    # Cast the result of json.loads to dict[str, Any]
                     return cast(dict[str, Any], json.loads(resp_text))
                 return resp_text
         except (aiohttp.ClientError, TimeoutError) as e:
