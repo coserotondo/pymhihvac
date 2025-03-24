@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems via their local API using a SC-SL4 central control unit. Built especiallty for Home Assistant, enable the creation of climate, sensor and binary sensor entities. It can also be used standalone.
+A Python library for controlling Mitsubishi Heavy Industries (MHI) HVAC systems via their local API using a SC-SL4 central control unit. Built especially for Home Assistant, enable the creation of climate, sensor and binary sensor entities. It can also be used standalone.
 
 ## Features
 
