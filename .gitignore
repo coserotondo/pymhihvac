@@ -172,3 +172,32 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+lib64
+pyvenv.cfg
+bin/activate
+bin/activate.csh
+bin/activate.fish
+bin/Activate.ps1
+bin/docutils
+bin/keyring
+bin/markdown-it
+bin/normalizer
+bin/pip
+bin/pip3
+bin/pip3.11
+bin/pygmentize
+bin/pyproject-build
+bin/python
+bin/python3
+bin/python3.11
+bin/rst2html
+bin/rst2html4
+bin/rst2html5
+bin/rst2latex
+bin/rst2man
+bin/rst2odt
+bin/rst2pseudoxml
+bin/rst2s5
+bin/rst2xetex
+bin/rst2xml
+bin/twine

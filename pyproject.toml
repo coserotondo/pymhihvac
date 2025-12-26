@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pymhihvac"
-version = "0.1.1"
+version = "0.1.2"
 authors = [{ name = "coserotondo", email = "cose.rotondo@gmail.com" }]
 description = "Python library to interact with Mitsubishi Heavy Industries HVAC systems"
 readme = {file = "README.md", content-type = "text/markdown"}

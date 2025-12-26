@@ -188,6 +188,17 @@ class MHIHVACDeviceData:
 
 -   voluptuous >= 0.13.0
 
+## Changelog
+
+**0.1.2**
+
+-   Fix raw dataset for invalid data.
+
+**0.1.1**
+
+-   First release.
+
+
 
 ## Contributing
 
