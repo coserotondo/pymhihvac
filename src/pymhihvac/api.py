@@ -163,11 +163,13 @@ def _get_filtered_group_data(
         for floor in floors:
             groups.extend(floor.get("GroupData", []))
 
-    # First, filter out groups with OnOff == "4" or GroupNo == "-1"
+    # First, filter out groups with OnOff == "4" or GroupNo == "-1" or Mode == "0"
     valid_groups = [
         group
         for group in groups
-        if group.get("OnOff") != "4" and group.get("GroupNo") != "-1"
+        if group.get("OnOff") != "4"
+        and group.get("GroupNo") != "-1"
+        and group.get("Mode") != "0"
     ]
 
     # Further filter based on include_groups (if provided)
